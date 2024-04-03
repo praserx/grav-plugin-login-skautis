@@ -1,0 +1,57 @@
+name: Login SkautIS
+version: 1.0.0
+testing: false
+description: Enables user to authenticate via SkautIS.
+icon: sign-in
+author:
+  name: Praser
+  email: praserx@gmail.com
+  url: https://github.com/praserx
+homepage: ""
+keywords: login, authentication, admin, security, skautis, sso
+bugs: ""
+license: MIT
+
+dependencies:
+  - { name: grav, version: ">=1.7.0" }
+  - { name: form, version: ">=4.0.0" }
+  - { name: email, version: ">=3.0.0" }
+  - { name: login, version: ">=3.0.0" }
+
+form:
+  validation: strict
+  fields:
+    enabled:
+      type: toggle
+      label: Plugin Status
+      highlight: 1
+      default: 0
+      options:
+        1: Enabled
+        0: Disabled
+      validate:
+        type: bool
+
+    provider_url:
+      type: text
+      disabled: false
+      label: Provider URL
+      help: SkautIS authentication provider URL
+
+    app_id:
+      type: text
+      disabled: false
+      label: Application ID
+
+    parent_unit:
+      type: text
+      disabled: false
+      label: Parent Unit ID
+      help: Identification of parent unit to which the user must be assigned for successful login
+
+    parent_unit_match_level:
+      type: int
+      disabled: false
+      default: 0
+      label: Parent Unit match level
+      help: Unit required for successful login (0 = exact, 1 = parent, ...)
