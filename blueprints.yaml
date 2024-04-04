@@ -55,3 +55,15 @@ form:
       default: 0
       label: Parent Unit match level
       help: Unit required for successful login (0 = exact, 1 = parent, ...)
+
+    built_in_css:
+      type: toggle
+      label: Built-in styles
+      help: Use built-in CSS styles
+      highlight: 1
+      default: 0
+      options:
+        1: Enabled
+        0: Disabled
+      validate:
+        type: bool

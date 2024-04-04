@@ -3,3 +3,4 @@ provider_url: https://is.skaut.cz/Login/
 app_id: ""
 parent_unit: ""
 parent_unit_match_level: 0
+built_in_css: true

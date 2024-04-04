@@ -1,0 +1,23 @@
+.form-login-skautis {
+    font-family: inherit;
+}
+.form-login-skautis button {
+    color: #ffffff;
+    background-color: #2271b1;
+    border: 0px;
+    border-radius: 3px;
+    padding: 15px 10px;
+}
+
+.form-login-skautis button:hover {
+    background-color: #135e96;
+}
+
+.lily {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-image: url('../images/lilie.png');
+}

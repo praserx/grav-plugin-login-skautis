@@ -1,0 +1,12 @@
+{% if skautis.enabled %}
+<div class="form-login-skautis">
+    <form method="post" action="/login">
+        <button name="skautis" value="login" type="submit" class="button skautis" href="{{ base_url_relative }}/login/skautis{{ config.system.param_sep }}login" title="Přihlásit se přes SkautIS">
+            <i class="fa align-middle lily"></i>&emsp;Přihlásit se přes SkautIS
+        </button>
+    </form>
+</div>
+<span class="delimiter">nebo</span>
+<p>Využijte pro přihlášení lokální uživatelský účet</p>
+<br/>
+{% endif %}

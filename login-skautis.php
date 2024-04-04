@@ -19,8 +19,6 @@ use Grav\Common\Session;
 use Grav\Common\User\User;
 use Grav\Plugin\Login\Events\UserLoginEvent;
 use Grav\Plugin\Login\Login;
-use Grav\Plugin\Login\OAuth2\OAuth2;
-use Grav\Plugin\Login\OAuth2\ProviderFactory;
 use RocketTheme\Toolbox\Event\Event;
 use RocketTheme\Toolbox\Session\Message;
 
@@ -35,8 +33,6 @@ class LoginSkautisPlugin extends Plugin
     /**
      * @property 
      */
-    private $skautisGateway = null;
-
     private $wsdlManager = null;
 
     /**
@@ -50,7 +46,6 @@ class LoginSkautisPlugin extends Plugin
             'onUserLoginFailure'        => ['userLoginFailure', 100],
             'onUserLogin'               => ['userLogin', 0],
             'onUserLogout'              => ['userLogout', 0],
-            'onTask.redirect.skautis'   => ['userRedirectSkautis', 0],
             'onTask.login.skautis'      => ['userSkautisLogin', 0],
             'onTask.logout.skautis'     => ['userSkautisLogout', 0],
         ];
@@ -71,9 +66,14 @@ class LoginSkautisPlugin extends Plugin
      */
     public function onPluginsInitialized()
     {
+        // TODO: Enable SkautIS login also for admin site
+        if ($this->isAdmin()) {
+            return;
+        }
+
         // Check to ensure login plugin is enabled.
         if (!$this->grav['config']->get('plugins.login.enabled')) {
-            throw new \RuntimeException('The Login SkautIS plugin needs to be installed and enabled.');
+            throw new \RuntimeException('The Login plugin needs to be installed and enabled.');
         }
 
         if (!$this->config->get('plugins.login-skautis.provider_url')) {
@@ -89,7 +89,75 @@ class LoginSkautisPlugin extends Plugin
             throw new \RuntimeException('The Login SkautIS plugin parent unit need to be configured.');
         }
 
+        /** @var Uri $uri */
+        $uri = $this->grav['uri'];
+
+        /** @var Session */
+        $session = $this->grav['session'];
+
+        // Initialize WSDL Manager
         $this->wsdlManager = new Skautis\Wsdl\WsdlManager(new Skautis\Wsdl\WebServiceFactory(), new Skautis\Config($appid, false));
+        
+        $reqSkautis = !empty($_POST['skautis']) ? $_POST['skautis'] : $uri->param('skautis');
+        $reqSkautis = $reqSkautis ?: $this->grav['session']->skautis;
+        $reqPOST = !empty($_POST) ? $_POST : [];
+
+        $this->enable([
+            'onTwigTemplatePaths' => ['onTwigTemplatePaths', 0],
+            'onTwigSiteVariables' => ['onTwigSiteVariables', 0],
+            'onLoginPage'         => ['onLoginPage', 0],
+        ]);
+
+        // Manage SkautIS login
+        $reqTask = !empty($reqPOST['task']) ? $reqPOST['task'] : $uri->param('task');
+        if (!$reqTask && isset($reqPOST['skautis']) || (!empty($_GET) && $session->skautis)) {
+            $provider = $this->config->get('plugins.login-skautis.provider_url');
+            $appid = $this->config->get('plugins.login-skautis.app_id');
+
+            $redirect = $provider."?appid=".$appid;
+            $this->grav->redirect($redirect, 303);
+        }
+
+        // Aborted SkautIS authentication (invalidate it)
+        unset($session->skautis);
+    }
+
+    /**
+     * Add plugin templates path
+     */
+    public function onTwigTemplatePaths()
+    {
+        $this->grav['twig']->twig_paths[] = __DIR__ . '/templates';
+    }
+
+    /**
+     * Add Twig Site Variables
+     */
+    public function onTwigSiteVariables()
+    {
+        /** @var Twig $twig */
+        $twig = $this->grav['twig'];
+
+        $twig->twig_vars['skautis'] = [
+            'enabled'   => $this->config->get('plugins.login-skautis.enabled'),
+        ];
+        
+        // Add CSS for frontend if required
+        if (!$this->isAdmin() && $this->config->get('plugins.login-skautis.built_in_css')) {
+            $this->grav['assets']->add('plugin://login-skautis/styles/stylesheet.css');
+        }
+    }
+
+    /**
+     * Add navigation item to the admin plugin
+     */
+    public function onLoginPage()
+    {
+        // The new way how to integrate custom twig
+        $this->grav['login']->addProviderLoginTemplate('partials/skautis.html.twig');
+        
+        // The old way how to integrate custom twig
+        // $this->grav['twig']->plugins_hooked_loginPage['LoginSkautis'] = 'partials/skautis.html.twig';
     }
 
     /**
@@ -198,18 +266,6 @@ class LoginSkautisPlugin extends Plugin
      */
     public function userLogout(UserLoginEvent $event)
     {
-    }
-
-    /**
-     * [onTask.redirect.skautis]
-     */
-    public function userRedirectSkautis()
-    {
-        $provider = $this->config->get('plugins.login-skautis.provider_url');
-        $appid = $this->config->get('plugins.login-skautis.app_id');
-
-        $redirect = $provider."?appid=".$appid;
-        $this->grav->redirect($redirect, 303);
     }
 
     /**
